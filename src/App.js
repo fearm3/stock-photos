@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaSearch } from "react-icons/fa";
 import Photo from "./Photo";
 
@@ -12,6 +12,7 @@ function App() {
   const [photos, setPhotos] = useState([]);
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState("");
+  const mounted = useRef(false);
 
   const fetchImages = async () => {
     setLoading(true);
@@ -28,7 +29,9 @@ function App() {
       const data = await response.json();
       console.log(data);
       setPhotos((oldPhotos) => {
-        if (query) {
+        if (query && page === 1) {
+          return data.results;
+        } else if (query) {
           return [...oldPhotos, ...data.results];
         } else {
           return [...oldPhotos, ...data];
@@ -42,24 +45,24 @@ function App() {
   };
   useEffect(() => {
     fetchImages();
+    //eslint-disable-next-line
   }, [page]);
 
   useEffect(() => {
-    const event = window.addEventListener("scroll", () => {
-      if (
-        !loading &&
-        window.innerHeight + window.scrollY >= document.body.scrollHeight - 2
-      ) {
-        setPage((oldPage) => {
-          return oldPage + 1;
-        });
-      }
-    });
-    return () => window.removeEventListener("scroll", event);
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
   }, []);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    fetchImages();
+    if (!query) return;
+    if (page === 1) {
+      fetchImages();
+      return;
+    }
+    setPage(1);
     // console.log("try");
   };
   return (
