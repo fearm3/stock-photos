@@ -26,8 +26,14 @@ function App() {
     try {
       const response = await fetch(url);
       const data = await response.json();
-      // console.log(data);
-      setPhotos(data);
+      console.log(data);
+      setPhotos((oldPhotos) => {
+        if (query) {
+          return [...oldPhotos, ...data.results];
+        } else {
+          return [...oldPhotos, ...data];
+        }
+      });
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -36,23 +42,37 @@ function App() {
   };
   useEffect(() => {
     fetchImages();
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     const event = window.addEventListener("scroll", () => {
-      console.log(``);
+      if (
+        !loading &&
+        window.innerHeight + window.scrollY >= document.body.scrollHeight - 2
+      ) {
+        setPage((oldPage) => {
+          return oldPage + 1;
+        });
+      }
     });
     return () => window.removeEventListener("scroll", event);
   }, []);
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("try");
+    fetchImages();
+    // console.log("try");
   };
   return (
     <main>
       <section className="search">
         <form className="search-form">
-          <input type="text" placeholder="search" className="form-input" />
+          <input
+            type="text"
+            placeholder="search"
+            className="form-input"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
           <button type="submit" className="submit-btn" onClick={handleSubmit}>
             <FaSearch />
           </button>
@@ -61,7 +81,7 @@ function App() {
       <section className="photos">
         <div className="photos-center">
           {photos.map((image, index) => {
-            console.log(image);
+            // console.log(image);
             return <Photo key={image.id} {...image} />;
           })}
         </div>
